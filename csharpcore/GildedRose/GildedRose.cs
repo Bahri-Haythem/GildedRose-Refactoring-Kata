@@ -69,6 +69,18 @@ public class OtherGoodsUpdater : IStrategy
     }
 }
 
+public class ConjuredUpdater : IStrategy
+{
+    public void Update(Item item)
+    {
+        if (item.Quality >= 2)
+            item.Quality -= 2;
+        else
+            item.Quality = 0;
+        item.SellIn--;
+    }
+}
+
 public class GildedRose
 {
     private readonly IList<Item> _items;
@@ -87,6 +99,8 @@ public class GildedRose
             context.setStrategy(new BrieUpdater()).UpdateItem(item);
         else if (item.Name == "Backstage passes to a TAFKAL80ETC concert")
             context.setStrategy(new ConcertUpdater()).UpdateItem(item);
+        else if (item.Name == "Conjured Mana Cake")
+            context.setStrategy(new ConjuredUpdater()).UpdateItem(item);
         else
             context.setStrategy(new OtherGoodsUpdater()).UpdateItem(item);
     }
