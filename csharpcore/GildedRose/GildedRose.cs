@@ -2,6 +2,73 @@
 
 namespace GildedRoseKata;
 
+public interface IStrategy
+{
+    void Update(Item item);
+}
+
+class Context
+{
+    private IStrategy _strategy;
+    public Context()
+    {
+    }
+    public Context setStrategy(IStrategy strategy)
+    {
+        _strategy = strategy;
+        return this;
+    }
+    public void UpdateItem(Item item)
+    {
+        _strategy.Update(item);
+    }
+}
+public class BrieUpdater : IStrategy
+{
+    public void Update(Item item)
+    {
+        item.SellIn--;
+        if (item.Quality + 2 <= 50 && item.SellIn < 0)
+            item.Quality += 2;
+        else if (item.Quality < 50)
+            item.Quality++;
+    }
+}
+
+public class SulfurasUpdater : IStrategy
+{
+    public void Update(Item item)
+    {
+    }
+}
+
+public class ConcertUpdater : IStrategy
+{
+    public void Update(Item item)
+    {
+        item.SellIn--;
+        if (item.SellIn < 0)
+            item.Quality = 0;
+        else if (item.SellIn < 5 && item.Quality + 3 <= 50)
+            item.Quality += 3;
+        else if (item.SellIn < 10 && item.Quality + 2 <= 50)
+            item.Quality += 2;
+        else if (item.Quality < 50)
+            item.Quality++;
+    }
+}
+public class OtherGoodsUpdater : IStrategy
+{
+    public void Update(Item item)
+    {
+        item.SellIn--;
+        if (item.SellIn < 0 && item.Quality >= 2)
+            item.Quality -= 2;
+        else if (item.Quality > 0)
+            item.Quality--;
+    }
+}
+
 public class GildedRose
 {
     private readonly IList<Item> _items;
@@ -10,60 +77,25 @@ public class GildedRose
     {
         _items = items;
     }
+    private void UpdateItem(Item item)
+    {
+        var context = new Context();
+
+        if (item.Name == "Sulfuras, Hand of Ragnaros")
+            context.setStrategy(new SulfurasUpdater()).UpdateItem(item);
+        else if (item.Name == "Aged Brie")
+            context.setStrategy(new BrieUpdater()).UpdateItem(item);
+        else if (item.Name == "Backstage passes to a TAFKAL80ETC concert")
+            context.setStrategy(new ConcertUpdater()).UpdateItem(item);
+        else
+            context.setStrategy(new OtherGoodsUpdater()).UpdateItem(item);
+    }
 
     public void UpdateQuality()
     {
         for (var i = 0; i < _items.Count; i++)
         {
-            if (_items[i].Name == "Sulfuras, Hand of Ragnaros")
-                continue;
-
-            if (_items[i].Name != "Aged Brie"
-                && _items[i].Name != "Backstage passes to a TAFKAL80ETC concert"
-                && _items[i].Quality > 0)
-            {
-                _items[i].Quality--;
-            }
-            else if (_items[i].Name == "Backstage passes to a TAFKAL80ETC concert")
-            {
-                if (_items[i].SellIn <= 5 && _items[i].Quality + 2 < 50)
-                {
-                    _items[i].Quality += 3;
-                }
-                else if (_items[i].SellIn <= 10 && _items[i].Quality + 1 < 50)
-                {
-                    _items[i].Quality += 2;
-                }
-                else if (_items[i].Quality < 50)
-                {
-                    _items[i].Quality++;
-                }
-            }
-            else if (_items[i].Quality < 50)
-            {
-                _items[i].Quality++;
-            }
-
-            _items[i].SellIn--;
-
-            if (_items[i].SellIn < 0)
-            {
-                if (_items[i].Name == "Aged Brie" && _items[i].Quality < 50)
-                {
-                    _items[i].Quality++;
-                }
-                else if (_items[i].Name != "Backstage passes to a TAFKAL80ETC concert"
-                    && _items[i].Name != "Aged Brie"
-                    && _items[i].Quality > 0)
-                {
-                    _items[i].Quality--;
-                }
-                else if (/*_items[i].Name != "Aged Brie"*/
-                    _items[i].Name == "Backstage passes to a TAFKAL80ETC concert")
-                {
-                    _items[i].Quality = 0;
-                }
-            }
+            UpdateItem(_items[i]);
         }
     }
 }
